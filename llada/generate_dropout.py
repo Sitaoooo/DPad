@@ -141,6 +141,8 @@ def generate(model, prompt, steps=128, gen_length=128, block_length=128, tempera
         num_transfer_tokens = get_num_transfer_tokens(block_mask_indices, steps)
 
         q_indices, k_indices = suffix_dropout(x, sampler, block_end)
+        # q_indices: [:block_end] + [preserved_masks]
+        # Since all the tokens following current block are masks, there is no need to use indices to get them.
         x_pruned = x[:,:q_indices.shape[1]]
 
         i = 0
@@ -208,8 +210,9 @@ def generate_with_prefix_cache(model, prompt, steps=128, gen_length=128, block_l
         block_mask_indices = (x[:, block_start:block_end] == mask_id)
         num_transfer_tokens = get_num_transfer_tokens(block_mask_indices, steps)
 
-
         q_indices, k_indices = suffix_dropout(x, sampler, block_end)
+        # q_indices: [:block_end] + [preserved_masks]
+        # Since all the tokens following current block are masks, there is no need to use indices to get them.
         x_pruned = x[:,:q_indices.shape[1]]
 
         output = model(x_pruned, use_cache=True, q_indices=q_indices, k_indices=k_indices, seq_len=seq_len, update_rope=True)
@@ -302,6 +305,8 @@ def generate_with_dual_cache(model, prompt, steps=128, gen_length=128, block_len
         num_transfer_tokens = get_num_transfer_tokens(block_mask_indices, steps)
 
         q_indices, k_indices = suffix_dropout(x, sampler, block_end)
+        # q_indices: [:block_end] + [preserved_masks]
+        # Since all the tokens following current block are masks, there is no need to use indices to get them.
         x_pruned = x[:,:q_indices.shape[1]]
 
         # cache init and update
