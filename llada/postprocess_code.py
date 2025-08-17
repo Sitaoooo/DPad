@@ -14,6 +14,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # Modified from Dream repos: https://github.com/HKUNLP/Dream
+# Copyright 2025 [Your Name or Organization]
+# 
+# This file has been modified by [Your Name or Organization]. Changes include:
+# - [Briefly describe the changes you made]
+
 
 import evaluate as hf_evaluate
 import os

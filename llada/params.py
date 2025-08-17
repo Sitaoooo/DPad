@@ -1,3 +1,19 @@
+# Copyright 2025 [Your Name or Organization]
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -21,48 +37,3 @@ parser.add_argument("-c", "--use_cache", dest='c', help='Use cache', action='sto
 parser.add_argument("-dc", "--dual_cache", dest='dc', help='Dual cache', action='store_true')
 parser.add_argument("-re", "--from_scratch", dest='re', help='From scratch', action='store_true')
 parser.add_argument("-e", "--early_termination", dest='e', help='From scratch', action='store_true')
-
-# args = parser.parse_args()
-
-# def get_tasks(type):
-#     if type == 'overall':
-#         # models = ['instruct', '1.5']
-#         # model_paths = ['GSAI-ML/LLaDA-8B-Instruct', 'GSAI-ML/LLaDA-1.5']
-#         # lengths = [512,256,512,256]
-#         # block_sizes = [32,32,32,32]
-#         # tasks = ['humaneval', 'gsm8k', 'mbpp', 'minerva_math']
-#         # shots = [0, 4, 3, 4]
-#         # strategies = [0,1]
-#         # pruning_strategies = [[(3, 2.3), (4, 2.0), (3,2.3), (4,2.0)], [(3, 1.6), (3, 1.6), (3, 1.6), (3, 1.6)]]
-#         # windows = [[512,128,128,128],[128,128,128,128]]
-#         models = ['1.5']
-#         model_paths = ['GSAI-ML/LLaDA-1.5']
-#         lengths = [256]
-#         block_sizes = [32]
-#         tasks = ['minerva_math']
-#         shots = [4]
-#         strategies = [1]
-#         pruning_strategies = [[(3, 1.6), (3, 1.6), (3, 1.6), (3, 1.6)]]
-#         windows = [[256,128,128,256],[128,128,128,128]]
-
-#     elif type == 'Fast-dLLM':
-#         models = ['instruct']
-#         model_paths = ['GSAI-ML/LLaDA-8B-Instruct']
-#         lengths = [512,256]
-#         block_sizes = [32,32]
-#         tasks = ['humaneval', 'gsm8k']
-#         shots = [0, 5]
-#         strategies = [0,1,2,3]
-#         pruning_strategies = [(3, 2.3), (4, 2.0)]
-
-#     elif type == 'speedup':
-#         models = ['instruct']
-#         model_paths = ['GSAI-ML/LLaDA-8B-Instruct']
-#         lengths = [256, 1024,512]
-#         block_sizes = [32, 128,32]
-#         tasks = ['gsm8k']
-#         shots = [1]
-#         strategies = [1,2,3]
-#         pruning_strategies = [[(4,2.0)]]
-
-#     return models, model_paths, lengths, block_sizes, tasks, shots, strategies, pruning_strategies, windows
