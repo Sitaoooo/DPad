@@ -110,13 +110,11 @@ if __name__ == "__main__":
         output_path = f"output/humaneval_results/{model}/{filename}"
         cmd_list.extend(['--output_path', output_path])
 
-    # 3. Print the command to be executed for easy debugging.
-    print("Command to be executed:")
-    # shlex.join safely converts the list into a human-readable command-line string.
+    # 3. Print the command 
     print(shlex.join(cmd_list))
     print("-" * 50)  # Separator
 
-    # 4. Execute the command using subprocess.run() with robust error handling.
+    # 4. Execute the command
     try:
         # Use a 'with' statement to open log files, ensuring they are properly closed afterward.
         with open(log_file, 'w') as log_f, open(debug_file, 'w') as debug_f:

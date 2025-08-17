@@ -437,42 +437,63 @@ class RotaryEmbedding(nn.Module):
     def apply_rotary_pos_emb(self, pos_sin: torch.Tensor, pos_cos: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
         return ((t * pos_cos) + (self.rotate_half(t) * pos_sin)).to(t.dtype)
     
-    def forward(self, q: torch.Tensor, k: torch.Tensor,q_indices:torch.Tensor=None, k_indices:torch.Tensor=None,seq_len=None, update=False) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, q: torch.Tensor, k: torch.Tensor, q_indices:torch.Tensor=None, k_indices:torch.Tensor=None, seq_len=None, update=False, block_end=None) -> Tuple[torch.Tensor, torch.Tensor]:
         if self.config.rope_full_precision:
             q_, k_ = q.float(), k.float()
         else:
             q_, k_ = q, k
         with torch.autocast(q.device.type, enabled=False):
-            if update is True:
-                pos_sin, pos_cos = self.get_rotary_embedding(seq_len, q_.device)
+            if q_indices is not None:
+                # dropout
+                if update is True:
+                    pos_sin, pos_cos = self.get_rotary_embedding(seq_len, q_.device)
+                    pos_sin = pos_sin.type_as(q_)
+                    pos_cos = pos_cos.type_as(q_)
+                    self.__cache["rope_pos_sin_q"] = pos_sin[:, :, q_indices[0], :]
+                    self.__cache["rope_pos_cos_q"] = pos_cos[:, :, q_indices[0], :]
+                    self.__cache["rope_pos_sin_k"] = pos_sin[:, :, k_indices[0], :]
+                    self.__cache["rope_pos_cos_k"] = pos_cos[:, :, k_indices[0], :]
+
+                bs,_ = q_indices.shape
+                q_list = []
+
+                for i in range(bs):
+                    q_i = self.apply_rotary_pos_emb(
+                    self.__cache["rope_pos_sin_q"],
+                    self.__cache["rope_pos_cos_q"],
+                    q_[i].unsqueeze(0),
+                    )
+                    q_list.append(q_i)
+                q_ = torch.cat(q_list,dim=0)
+                bs,_ = k_indices.shape
+                k_list = []
+                for i in range(bs):
+                    k_i = self.apply_rotary_pos_emb(
+                    self.__cache["rope_pos_sin_k"],
+                    self.__cache["rope_pos_cos_k"],
+                    k_[i].unsqueeze(0),
+                    )
+                    k_list.append(k_i)
+                k_ = torch.cat(k_list,dim=0)
+            else:
+                # baseline
+                query_len, key_len = q_.shape[-2], k_.shape[-2]  # could be different if layer_past not None
+                pos_sin, pos_cos = self.get_rotary_embedding(key_len, q_.device)
                 pos_sin = pos_sin.type_as(q_)
                 pos_cos = pos_cos.type_as(q_)
-                self.__cache["rope_pos_sin_q"] = pos_sin[:, :, q_indices[0], :]
-                self.__cache["rope_pos_cos_q"] = pos_cos[:, :, q_indices[0], :]
-                self.__cache["rope_pos_sin_k"] = pos_sin[:, :, k_indices[0], :]
-                self.__cache["rope_pos_cos_k"] = pos_cos[:, :, k_indices[0], :]
-
-            bs,_ = q_indices.shape
-            q_list = []
-
-            for i in range(bs):
-                q_i = self.apply_rotary_pos_emb(
-                self.__cache["rope_pos_sin_q"],
-                self.__cache["rope_pos_cos_q"],
-                q_[i].unsqueeze(0),
-                )
-                q_list.append(q_i)
-            q_ = torch.cat(q_list,dim=0)
-            bs,_ = k_indices.shape
-            k_list = []
-            for i in range(bs):
-                k_i = self.apply_rotary_pos_emb(
-                self.__cache["rope_pos_sin_k"],
-                self.__cache["rope_pos_cos_k"],
-                k_[i].unsqueeze(0),
-                )
-                k_list.append(k_i)
-            k_ = torch.cat(k_list,dim=0)
+                if block_end is None:
+                    q_ = self.apply_rotary_pos_emb(
+                        pos_sin[:, :, key_len - query_len : key_len, :],
+                        pos_cos[:, :, key_len - query_len : key_len, :],
+                        q_,
+                    )
+                else:
+                    q_ = self.apply_rotary_pos_emb(
+                        pos_sin[:, :, block_end.item() - query_len : block_end.item(), :],
+                        pos_cos[:, :, block_end.item() - query_len : block_end.item(), :],
+                        q_,
+                    )
+                k_ = self.apply_rotary_pos_emb(pos_sin, pos_cos, k_)
         return q_.type_as(q), k_.type_as(k)
 
 
@@ -721,11 +742,6 @@ class LLaDABlock(nn.Module):
         k_indices: Optional[torch.Tensor] = None,
         update_rope: Optional[bool] = False,
         seq_len: Optional[int] = None,
-        resume_ratio: Optional[torch.Tensor] = None,
-        timer: Optional[torch.Tensor] = None,
-        past_key_values_last_step: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
-        block_start: Optional[int] = None,
-        block_length: Optional[int] = None
     ) -> Tuple[torch.Tensor, Optional[Tuple[torch.Tensor, torch.Tensor]]]:
         B, T, C = q.size()  # batch size, sequence length, d_model
         dtype = k.dtype
@@ -772,7 +788,7 @@ class LLaDABlock(nn.Module):
 
         if self.config.rope:
             # Apply rotary embeddings.
-            q, k = self.rotary_emb(q, k, q_indices=q_indices, k_indices=k_indices, update=update_rope, seq_len=seq_len)
+            q, k = self.rotary_emb(q, k, q_indices=q_indices, k_indices=k_indices, update=update_rope, seq_len=seq_len, block_end=replace_indices.max()+1 if replace_position is not None else None)
 
         if attention_bias is not None:
             # Resize and cast attention bias.

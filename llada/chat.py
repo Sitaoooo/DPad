@@ -20,7 +20,7 @@ import argparse
 
 from WorkStation.DPad.llada.generate_dropout import generate, generate_with_prefix_cache, generate_with_dual_cache
 from transformers import AutoTokenizer, AutoModel
-from model.modeling_llada import LLaDAModelLM
+from WorkStation.DPad.llada.model.modeling_llada_dropout import LLaDAModelLM
 
 def chat(args):
     device = 'cuda'
