@@ -41,8 +41,6 @@ def read_jsonl(file_path):
     return data
 
 
-
-
 def write_jsonl(data, file_path):
     with open(file_path, 'w') as file:
         for item in data:

@@ -301,8 +301,10 @@ All evaluation scripts are located in the `llada/scripts` and `dream/scripts`.
 cd llada
 ```
 
-```bash
-bash main_instruct.sh
+```shell
+bash ./scirpts/main_instruct.sh
+bash ./scirpts/main_1.5.sh
+bash ./scirpts/long_seq.sh
 ```
 
 Results will be saved in the `llada/output`.
