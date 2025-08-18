@@ -143,6 +143,7 @@ def generate(model, prompt, steps=128, gen_length=128, block_length=128, tempera
         q_indices, k_indices = suffix_dropout(x, sampler, block_end)
         # q_indices: [:block_end] + [preserved_masks]
         # Since all the tokens following current block are masks, there is no need to use indices to get them.
+        # This operation is basically equivalent to x_pruned = x.gather(1, q_indices), except that slicing will not create a copy of x.
         x_pruned = x[:,:q_indices.shape[1]]
 
         i = 0
@@ -201,7 +202,10 @@ def generate_with_prefix_cache(model, prompt, steps=128, gen_length=128, block_l
     steps = steps // num_blocks
 
     nfe = 0
-    sampler = GaussianSampler(length=gen_length, sigma=sigma, scale=scale, window=window)
+    if dropout == 'gaussian':
+        sampler = GaussianSampler(length=gen_length, sigma=sigma, scale=scale, window=window)
+    elif dropout == 'uniform':
+        sampler = UniformSampler(length=gen_length, number=preserved_tokens, window=window)
             
     for num_block in range(num_blocks):
         block_start = prompt.shape[1] + num_block * block_length
@@ -213,6 +217,7 @@ def generate_with_prefix_cache(model, prompt, steps=128, gen_length=128, block_l
         q_indices, k_indices = suffix_dropout(x, sampler, block_end)
         # q_indices: [:block_end] + [preserved_masks]
         # Since all the tokens following current block are masks, there is no need to use indices to get them.
+        # This operation is basically equivalent to x_pruned = x.gather(1, q_indices), except that slicing will not create a copy of x.
         x_pruned = x[:,:q_indices.shape[1]]
 
         output = model(x_pruned, use_cache=True, q_indices=q_indices, k_indices=k_indices, seq_len=seq_len, update_rope=True)
@@ -295,8 +300,11 @@ def generate_with_dual_cache(model, prompt, steps=128, gen_length=128, block_len
 
     nfe = 0  
 
-    sampler = GaussianSampler(length=gen_length, window=window, sigma=sigma, scale=scale)
-    
+    if dropout == 'gaussian':
+        sampler = GaussianSampler(length=gen_length, sigma=sigma, scale=scale, window=window)
+    elif dropout == 'uniform':
+        sampler = UniformSampler(length=gen_length, number=preserved_tokens, window=window)
+        
     for num_block in range(num_blocks):
         block_start = prompt.shape[1] + num_block * block_length
         block_end = block_start + block_length
@@ -307,6 +315,7 @@ def generate_with_dual_cache(model, prompt, steps=128, gen_length=128, block_len
         q_indices, k_indices = suffix_dropout(x, sampler, block_end)
         # q_indices: [:block_end] + [preserved_masks]
         # Since all the tokens following current block are masks, there is no need to use indices to get them.
+        # This operation is basically equivalent to x_pruned = x.gather(1, q_indices), except that slicing will not create a copy of x.
         x_pruned = x[:,:q_indices.shape[1]]
 
         # cache init and update
