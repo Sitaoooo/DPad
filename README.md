@@ -97,7 +97,7 @@ DPad delivers transformative speedups while maintaining or improving scores. Bel
 <center>
 <strong>Performance on LLaDA-Instruct</strong>
 
-<table style="width:100%; border-collapse: collapse; text-align: center;">
+<table style="width:100%; border-collapse: collapse; text-align:left;">
   <thead style="background-color:#f2f2f2;">
     <tr>
       <th style="padding: 8px; border: 1px solid #ddd;">Benchmark</th>
@@ -188,7 +188,7 @@ DPad delivers transformative speedups while maintaining or improving scores. Bel
 
 <strong>Performance on LLaDA-1.5</strong>
 
-<table style="width:100%; border-collapse: collapse; text-align: center;">
+<table style="width:100%; border-collapse: collapse; text-align: left;">
   <thead style="background-color:#f2f2f2;">
     <tr>
       <th style="padding: 8px; border: 1px solid #ddd;">Benchmark</th>
@@ -279,7 +279,7 @@ DPad delivers transformative speedups while maintaining or improving scores. Bel
 
 
 <strong>Performance on Dream-Base</strong>
-<table style="width:100%; border-collapse: collapse; text-align: center;">
+<table style="width:100%; border-collapse: collapse; text-align: left;">
   <thead style="background-color:#f2f2f2;">
     <tr>
       <th style="padding: 8px; border: 1px solid #ddd;">Benchmark</th>
