@@ -7,7 +7,7 @@
 ## DPad: Efficient Diffusion Language Models with Suffix Dropout
 
 <p align="center">
-  <a href="https://arxiv.org/abs/submit/6718185"><b>📄 Paper</b></a> •
+  <a href="https://arxiv.org/abs/submit/6718185"><b>📄 Paper</b></a>
   </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
     <br>
     <small><b>Accuracy:</b> DPad-enhanced dLLMs achieve up to a <b>+26.46% improvement</b> over vanilla dLLM baselines.</small>
     <br>
-    <small>(Evaluation conducted on `NVIDIA A100-PCIe-80GB GPUs`).</small>
+    <small>(Evaluation conducted on NVIDIA A100-PCIe-80GB GPUs).</small>
 </p>
 
 **Diffusion Scratchpad (DPad)** is a novel training-free inference paradigm that overcomes a key efficiency bottleneck in Diffusion Language Models (dLLMs): the high computational cost of full suffix attention. By intelligently pruning redundant suffix tokens, DPad achieves:
