@@ -67,7 +67,7 @@ DPad overcomes the high computational overhead of dLLMs, where models predict al
 * **Sliding Window:** Maintains a fixed-length suffix window, preventing computation from scaling with the full sequence length.
 * **Distance-Decay Dropout:** Progressively prunes distant suffix tokens using a Gaussian sampling strategy, focusing computation on the most relevant nearby tokens.
 
-<p align="center">
+<p align="left">
     <img src="assets/dpad.png" width="800">
     <br>
     <small><b>Overview of DPad vs. other generation methods:</b> 
