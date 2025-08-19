@@ -1,6 +1,7 @@
 <p align="center">
-    <img src="assets/icon2.png" width="10">
+    <img src="assets/icon2.png" width="50">
 </p>
+
 
 
 ## DPad: Efficient Diffusion Language Models with Suffix Dropout
@@ -22,7 +23,6 @@
     <br>
     <small>(Evaluation conducted on NVIDIA A100-PCIe-80GB GPUs).</small>
 </p>
-
 **Diffusion Scratchpad (DPad)** is a novel training-free inference paradigm that overcomes a key efficiency bottleneck in Diffusion Language Models (dLLMs): the high computational cost of full suffix attention. By intelligently pruning redundant suffix tokens, DPad achieves:
 
 - Up to a staggering **61.39x+ acceleration** over vanilla dLLM baselines on long-sequence benchmarks.
@@ -46,7 +46,7 @@ This repository provides the code to reproduce our evaluation results.
 
 DPad overcomes the high computational overhead of dLLMs, where models predict all future suffix tokens at each step while retaining only a small fraction.
 
-![Attentiln_scre](/Users/cosmos/Desktop/WorkStation/MyDLLM/DPad/assets/attention_score.png)
+![Attentiln_scre](assets/attention_score.png)
 
 **1. The "Scratchpad" Insight:** We identify that suffix tokens function as an information reservoir—a "scratchpad"—that collects signals from already decoded prefix tokens to guide generation. However, we found that most of these suffix tokens are redundant and their importance decays sharply with distance.
 
@@ -358,13 +358,13 @@ Furthermore, DPad is complementary to other dLLM optimizations. It targets the r
 <center>
 <strong>LLaDA-1.5 on GSM8K (1024 tokens)</strong>
 
-![LLaDA](/Users/cosmos/Desktop/WorkStation/MyDLLM/DPad/assets/speedup_llada.png)
+![LLaDA](assets/speedup_llada.png)
 
 
 
 <strong>Dream on Humaneval (1024/2048 tokens)</strong>
 
-![Dream](/Users/cosmos/Desktop/WorkStation/MyDLLM/DPad/assets/speedup_dream.png)
+![Dream](assets/speedup_dream.png)
 
 ## 🚀 Usage Guide
 
