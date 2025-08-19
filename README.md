@@ -83,7 +83,7 @@ This repository is built upon the [Fast-dLLM](https://github.com/NVlabs/Fast-dLL
 
 * **Simplified Command-Line Interface**: To simplify experiments, the original complex commands have been wrapped into a user-friendly `run.py` script. You can now run evaluations and generation with simple, intuitive arguments. 
 
-* **Dynamic Suffix Sampling (DPad Core)**: The core of DPad is implemented in sampler.py and integrated into the main generation pipelines (llada/generate.py for LLaDA and dream/model/generation_utils_block.py for Dream). This module applies distance-decay dropout within the sliding window before the decoding process of each block, efficiently pruning redundant suffix tokens.
+* **Dynamic Suffix Sampling (DPad Core)**: The core of DPad is implemented in `sampler.py` and integrated into the main generation pipelines (`llada/generate.py` for LLaDA and `dream/model/generation_utils_block.py` for Dream). This module applies distance-decay dropout within the sliding window before the decoding process of each block, efficiently pruning redundant suffix tokens.
 
 * **Expanded Model Support**: We have extended support to include the full semi-autoregressive mode for the `Dream-Base` model, enabling comprehensive evaluation across different dLLM architectures. 
 
