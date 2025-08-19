@@ -1,6 +1,7 @@
 <p align="center">
-    <img src="/home/xc258/WorkStation/DPad/asset/icon.png" width="100">
+    <img src="assets/icon2.png" width="10">
 </p>
+
 
 ## DPad: Efficient Diffusion Language Models with Suffix Dropout
 
