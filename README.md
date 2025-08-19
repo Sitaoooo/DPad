@@ -12,17 +12,17 @@
 
 <p align="center">
   </p>
-
 <hr>
 <p align="center">
-    <img src="assets/speedup_llada.png" width="400">
+    <img src="assets/speedup_llada.png" width="800">
     <br>
-    <small><b>Efficiency:</b> DPad-enhanced dLLMs achieve up to a <b>61.39× speedup</b> over vanilla dLLM baselines on long-sequence tasks.</small>
+    <small><b>Efficiency:</b> DPad-enhanced dLLMs achieve up to a <b>61.39× speedup</b> over vanilla dLLM baselines.</small>
     <br>
-    <small><b>Accuracy:</b> DPad-enhanced dLLMs achieve significant gains with up to a <b>+26.46% improvement</b> on GSM8K over vanilla dLLM baselines.</small>
+    <small><b>Accuracy:</b> DPad-enhanced dLLMs achieve up to a <b>+26.46% improvement</b> over vanilla dLLM baselines.</small>
     <br>
     <small>(Evaluation conducted on NVIDIA A100-PCIe-80GB GPUs).</small>
 </p>
+
 **Diffusion Scratchpad (DPad)** is a novel training-free inference paradigm that overcomes a key efficiency bottleneck in Diffusion Language Models (dLLMs): the high computational cost of full suffix attention. By intelligently pruning redundant suffix tokens, DPad achieves:
 
 - Up to a staggering **61.39x+ acceleration** over vanilla dLLM baselines on long-sequence benchmarks.
