@@ -432,10 +432,9 @@ cd dream
 
 ```shell
 bash ./scirpts/main_base.sh
+# Dream-Instruct is coming soon
 bash ./scirpts/long_seq.sh
 ```
-
-(Dream-Instruct is coming soon)
 
 Results will be saved in the `dream/output`.
 
