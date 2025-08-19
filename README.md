@@ -5,268 +5,365 @@
 ## DPad: Efficient Diffusion Language Models with Suffix Dropout
 
 <p align="center">
-  <a href="???"><b>📄 Paper</b></a> •
-  <!-- <a href="https://zhijie-group.github.io/Discrete-Diffusion-Forcing/"><b>📝 Blog Post</b></a> • -->
-  <!-- <a href="https://huggingface.co/spaces/zhijie3/D2F-LLaDA-Instruct-8B"><b>🚀 Online Demo</b></a> •
-  <a href="https://huggingface.co/SJTU-Deng-Lab/D2F_Dream_Base_7B_Lora"><b>🤗 D2F-Dream LoRA</b></a> • -->
-  <!-- <a href="https://huggingface.co/SJTU-Deng-Lab/D2F_LLaDA_Instruct_8B_Lora"><b>🤗 D2F-LLaDA LoRA</b></a>  -->
-</p>
+  <a href="https://arxiv.org/abs/submit/6718185"><b>📄 Paper</b></a> •
+  </p>
 
 <p align="center">
-  <!-- <a href="https://discord.gg/aDWgxT6S2q"><b>💬 Discord</b></a> • -->
-  <!-- <a href="docs/assets/img/d2f/wechat.png"><b>💬 Wechat</b></a> -->
-</p>
-
-
-
-<!-- https://github.com/user-attachments/assets/d9de6450-68d6-4caf-85c2-c7f384395c42
-
-
-<p align="center">
-  <br>
-  <small><b>Real-time generation demo:</b> our D2F model (left) uses parallel block decoding, while the AR baseline (right) generates tokens sequentially. This visualizes the source of D2F's significant throughput advantage.</small>
-</p> -->
+  </p>
 
 <hr>
-
 <p align="center">
-    <img src="docs/assets/img/d2f/fig1_main_result.png" width="800">
+    <img src="assets/speedup_llada.png" width="400">
     <br>
-    <small><b>Efficiency:</b> DPad-enhanced dLLMs achieve up to a <b>97.32× speedup</b> over vanilla dLLM baselines. </small>
+    <small><b>Efficiency:</b> DPad-enhanced dLLMs achieve up to a <b>61.39× speedup</b> over vanilla dLLM baselines on long-sequence tasks.</small>
     <br>
-    <small><b>Performance:</b> DPad-enhanced dLLMs achieve up to a <b>3.3× improvement</b>  in strict-match scores on GSM8K and Math over vanilla dLLM baselines. </small>
+    <small><b>Accuracy:</b> DPad-enhanced dLLMs achieve significant gains with up to a <b>+26.46% improvement</b> on GSM8K over vanilla dLLM baselines.</small>
     <br>
     <small>(Evaluation conducted on NVIDIA A100-PCIe-80GB GPUs).</small>
 </p>
 
-<!-- **Discrete Diffusion Forcing (D2F)** is a novel training and inference paradigm that, for the first time, enables open-source Diffusion Language Models (dLLMs) to surpass their autoregressive (AR) counterparts in inference speed. By introducing a highly efficient AR-diffusion hybrid model, D2F achieves:
-- Up to a **2.5x speedup** over leading AR models like LLaMA3-8B.
-- A staggering **50x+ acceleration** over vanilla dLLM baselines.
-- Comparable generation quality on standard reasoning and coding benchmarks.
-- **Integration with vLLM** to unlock the next tier of extreme inference acceleration.
+**Diffusion Scratchpad (DPad)** is a novel training-free inference paradigm that overcomes a key efficiency bottleneck in Diffusion Language Models (dLLMs): the high computational cost of full suffix attention. By intelligently pruning redundant suffix tokens, DPad achieves:
 
-This repository provides the code to reproduce our evaluation results and run generation demos.
+- Up to a staggering **61.39x+ acceleration** over vanilla dLLM baselines on long-sequence benchmarks.
+- A significant improvement in **strict-match accuracy** on reasoning tasks by enhancing in-context learning.
+- Comparable or better generation quality on standard reasoning and coding benchmarks.
+- **Seamless integration** with existing optimizations like parallel decoding and prefix caching for multiplicative speedups.
+
+This repository provides the code to reproduce our evaluation results.
 
 ## 🔥 News!
-* Aug 8, 2025: We've released the inference code and training pipeline of D2F!
+* Aug 19, 2025: We've released our paper on DPad!
 ## Contents
 - [🤔 How It Works](#-how-it-works)
 - [📊 Performance Highlights](#-performance-highlights)
-- [⚡️ Extreme Acceleration with vLLM Integration](#️-extreme-acceleration-with-vllm-integration)
+- [🚀 Scaling with Long Sequences & Other Optimizations](#-scaling-with-long-sequences--other-optimizations)
 - [🚀 Usage Guide](#-usage-guide)
 - [🙏 Acknowledgements](#-acknowledgements)
 - [©️ Citation](#️-citation)
 
 ## 🤔 How It Works
 
-D2F overcomes the historical speed bottlenecks of dLLMs (KV Cache incompatibility and strict sequential dependencies) by restructuring the generation process.
+DPad overcomes the high computational overhead of dLLMs, where models predict all future suffix tokens at each step while retaining only a small fraction.
 
-**1. Hybrid Architecture:** D2F employs a **block-wise causal attention** mechanism. Attention *within* a block is bidirectional, preserving rich local context, while attention *between* blocks is causal. This simple but powerful change makes the model fully compatible with the standard KV Cache, drastically reducing redundant computations.
+![Attentiln_scre](/Users/cosmos/Desktop/WorkStation/MyDLLM/DPad/assets/attention_score.png)
 
-**2. Efficient Training via Asymmetric Distillation:** Instead of training from scratch, we distill a powerful, pre-trained bidirectional dLLM (teacher) into our cache-friendly D2F model (student). The student learns to match the teacher's output with only a limited, causal view of the context.
+**1. The "Scratchpad" Insight:** We identify that suffix tokens function as an information reservoir—a "scratchpad"—that collects signals from already decoded prefix tokens to guide generation. However, we found that most of these suffix tokens are redundant and their importance decays sharply with distance.
+
+**2. The Diffusion Lottery Tickets (DLT) Hypothesis:** We find that even pruning high-attention "spike" tokens in the distant suffix has little effect on accuracy, as the model dynamically shifts its attention to nearby tokens. This suggests that a sparse subset of suffix tokens is sufficient. DPad acts as a training-free lottery ticket search, finding an efficient "winning ticket" for generation on the fly.
+
+**3. Suffix Dropout Mechanisms:** DPad introduces two simple, training-free strategies to eliminate this redundancy before attention computation:
+
+* **Sliding Window:** Maintains a fixed-length suffix window, preventing computation from scaling with the full sequence length.
+* **Distance-Decay Dropout:** Progressively prunes distant suffix tokens using a Gaussian sampling strategy, focusing computation on the most relevant nearby tokens.
 
 <p align="center">
-    <img src="docs/assets/img/d2f/fig3_overview.png" width="800">
+    <img src="assets/dpad.png" width="800">
     <br>
-    <small><b>Overview of Discrete Diffusion Forcing (D2F):</b> A D2F model (student) with a KV-cache-friendly block-wise causal attention mask is trained to mimic a powerful, pre-trained bidirectional dLLM (teacher), efficiently inheriting its capabilities.</small>
-</p>
-
-**3. High-Throughput Pipelined Decoding:** D2F is trained to predict future blocks based on *partially incomplete* prefixes. This enables a **pipelined parallel decoding** algorithm during inference, where multiple blocks are refined simultaneously in an asynchronous workflow, maximizing GPU utilization and throughput.
-
-<p align="center">
-    <img src="docs/assets/img/d2f/fig4_pipeline.png" width="800">
+    <small><b>Overview of DPad vs. other generation methods:</b> 
     <br>
-    <small><b>Visualization of our pipelined parallel decoding:</b> New blocks are dynamically added and decoded in parallel with their predecessors, moving from a conservative "semi-activated" state to an aggressive "fully-activated" state. This creates a continuous, high-throughput generation flow.</small>
+      (a) Autoregressive models generate one token at a time. <br>
+      (b) Standard dLLMs attend to all suffix tokens, incurring high computational costs. <br>
+      (c) DPad restricts attention to a small, nearby set of suffix tokens, eliminating redundant computation while preserving fidelity.</small>
 </p>
 
-https://github.com/user-attachments/assets/41a0176b-e4ae-4f8b-95a6-daed7af2a027
 
-<p align="center">
-  <br>
-  <small><b>A slow-motion demonstration of the parallel decoding process within a single block of D2F. Watch as multiple tokens within the block are refined simultaneously, showcasing the efficiency of our approach.</small>
-</p>
 
 ## 📊 Performance Highlights
 
-D2F delivers transformative speedups while maintaining or improving scores. Below is a comprehensive summary of performance on **LLaDA-Instruct-8B** and **Dream-Base-7B**, comparing our method against the original baseline and the previous SOTA acceleration method, Fast-dLLM.
+DPad delivers transformative speedups while maintaining or improving scores. Below is a comprehensive summary of performance on **LLaDA-Instruct** , **LLaDA-1.5** and **Dream-Base**, comparing our method against the original vanilla baseline and the optimized parallel decoding variant (Fast-dLLM).
 
 <center>
+<strong>Performance on LLaDA-Instruct</strong>
 
-**Performance on LLaDA-Instruct-8B**
 <table style="width:100%; border-collapse: collapse; text-align: center;">
   <thead style="background-color:#f2f2f2;">
     <tr>
       <th style="padding: 8px; border: 1px solid #ddd;">Benchmark</th>
       <th style="padding: 8px; border: 1px solid #ddd;">Metric</th>
-      <th style="padding: 8px; border: 1px solid #ddd;">LLaDA-Instruct (Baseline)</th>
-      <th style="padding: 8px; border: 1px solid #ddd;">Fast-dLLM (SOTA)</th>
-      <th style="padding: 8px; border: 1px solid #ddd;">D2F-LLaDA (Ours)</th>
+      <th style="padding: 8px; border: 1px solid #ddd;">Vanilla</th>
+      <th style="padding: 8px; border: 1px solid #ddd;">+DPad</th>
+      <th style="padding: 8px; border: 1px solid #ddd;">+Parallel (Fast-dLLM)</th>
+      <th style="padding: 8px; border: 1px solid #ddd;">+Parallel+DPad (Ours)</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td rowspan="2" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle;"><strong>GSM8K-4-shot</strong></td>
-      <td style="padding: 8px; border: 1px solid #ddd;">TPS ↑</td>
-      <td style="padding: 8px; border: 1px solid #ddd;">7.2</td>
-      <td style="padding: 8px; border: 1px solid #ddd;">35.2</td>
-      <td style="padding: 8px; border: 1px solid #ddd;"><strong>52.5 <font color="green">(7.3x)</font></strong></td>
+      <td rowspan="3" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle;"><strong>GSM8K</strong><br><em>4-shot</em></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Latency(s) ↓</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">27.48</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">18.35 <span style="color: green;">(1.50x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">8.55 <span style="color: green;">(3.21x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;"><strong>6.64 <span style="color: green;">(4.14x)</span></strong></td>
     </tr>
     <tr>
-      <td style="padding: 8px; border: 1px solid #ddd;">Score ↑</td>
-      <td style="padding: 8px; border: 1px solid #ddd;">77.4</td>
-      <td style="padding: 8px; border: 1px solid #ddd;"><b>78.9</b></td>
-      <td style="padding: 8px; border: 1px solid #ddd;">77.3</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Flexible Acc. ↑</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">78.39</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">78.54</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">78.54</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">79.76</td>
     </tr>
     <tr>
-      <td rowspan="2" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle; background-color: #fafafa;"><strong>MBPP-3-shot</strong></td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">TPS ↑</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">0.9</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">15.3</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;"><strong>47.6 <font color="green">(52.9x)</font></strong></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Strict Acc. ↑</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">37.38</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">63.84</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">38.67</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">64.97</td>
+    </tr>
+    <tr style="background-color: #fafafa;">
+      <td rowspan="3" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle;"><strong>MATH</strong><br><em>4-shot</em></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Latency(s) ↓</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">25.40</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">21.61 <span style="color: green;">(1.18x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">9.91 <span style="color: green;">(2.56x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;"><strong>9.20 <span style="color: green;">(2.76x)</span></strong></td>
+    </tr>
+    <tr style="background-color: #fafafa;">
+      <td style="padding: 8px; border: 1px solid #ddd;">Flexible Acc. ↑</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">33.58</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">33.42</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">33.40</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">33.30</td>
+    </tr>
+    <tr style="background-color: #fafafa;">
+      <td style="padding: 8px; border: 1px solid #ddd;">Strict Acc. ↑</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">8.42</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">28.04</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">8.76</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">27.98</td>
     </tr>
     <tr>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">Score ↑</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;"><b>39.0</b></td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">36.4</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">38.0</td>
+      <td rowspan="2" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle;"><strong>HumanEval</strong><br><em>0-shot</em></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Latency(s) ↓</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">34.67</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">27.41 <span style="color: green;">(1.26x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">11.48 <span style="color: green;">(3.02x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;"><strong>9.14 <span style="color: green;">(3.79x)</span></strong></td>
     </tr>
     <tr>
-      <td rowspan="2" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle;"><strong>HumanEval-0-shot</strong></td>
-      <td style="padding: 8px; border: 1px solid #ddd;">TPS ↑</td>
-      <td style="padding: 8px; border: 1px solid #ddd;">2.8</td>
-      <td style="padding: 8px; border: 1px solid #ddd;">19.2</td>
-      <td style="padding: 8px; border: 1px solid #ddd;"><strong>81.6 <font color="green">(29.1x)</font></strong></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Acc. ↑</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">43.90</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">47.56</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">43.29</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">46.34</td>
     </tr>
-    <tr>
-      <td style="padding: 8px; border: 1px solid #ddd;">Score ↑</td>
-      <td style="padding: 8px; border: 1px solid #ddd;">36.0</td>
-      <td style="padding: 8px; border: 1px solid #ddd;">35.4</td>
-      <td style="padding: 8px; border: 1px solid #ddd;"><b>40.2</b></td>
+    <tr style="background-color: #fafafa;">
+      <td rowspan="2" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle;"><strong>MBPP</strong><br><em>3-shot</em></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Latency(s) ↓</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">62.11</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">15.89 <span style="color: green;">(3.91x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">14.26 <span style="color: green;">(4.36x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;"><strong>10.32 <span style="color: green;">(6.02x)</span></strong></td>
     </tr>
-    <tr>
-      <td rowspan="2" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle; background-color: #fafafa;"><strong>Math-4-shot</strong></td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">TPS ↑</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">21.1</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">42.5</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;"><strong>90.2 <font color="green">(4.3x)</font></strong></td>
-    </tr>
-    <tr>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">Score ↑</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">23.7</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">22.4</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;"><b>29.1</b></td>
+    <tr style="background-color: #fafafa;">
+      <td style="padding: 8px; border: 1px solid #ddd;">Acc. ↑</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">15.00</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">40.40</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">15.00</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">39.40</td>
     </tr>
   </tbody>
 </table>
 
-**Performance on Dream-Base-7B**
+<strong>Performance on LLaDA-1.5</strong>
+
 <table style="width:100%; border-collapse: collapse; text-align: center;">
   <thead style="background-color:#f2f2f2;">
     <tr>
       <th style="padding: 8px; border: 1px solid #ddd;">Benchmark</th>
       <th style="padding: 8px; border: 1px solid #ddd;">Metric</th>
-      <th style="padding: 8px; border: 1px solid #ddd;">Dream-Base (Baseline)</th>
-      <th style="padding: 8px; border: 1px solid #ddd;">Fast-dLLM (SOTA)</th>
-      <th style="padding: 8px; border: 1px solid #ddd;">D2F-Dream (Ours)</th>
+      <th style="padding: 8px; border: 1px solid #ddd;">Vanilla</th>
+      <th style="padding: 8px; border: 1px solid #ddd;">+DPad</th>
+      <th style="padding: 8px; border: 1px solid #ddd;">+Parallel (Fast-dLLM)</th>
+      <th style="padding: 8px; border: 1px solid #ddd;">+Parallel+DPad (Ours)</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td rowspan="2" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle;"><strong>GSM8K-CoT-8-shot</strong></td>
-      <td style="padding: 8px; border: 1px solid #ddd;">TPS ↑</td>
-      <td style="padding: 8px; border: 1px solid #ddd;">9.5</td>
-      <td style="padding: 8px; border: 1px solid #ddd;">49.8</td>
-      <td style="padding: 8px; border: 1px solid #ddd;"><strong>91.2 <font color="green">(9.6x)</font></strong></td>
+      <td rowspan="3" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle;"><strong>GSM8K</strong><br><em>4-shot</em></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Latency(s) ↓</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">27.61</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">18.26 <span style="color: green;">(1.51x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">8.06 <span style="color: green;">(3.42x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;"><strong>6.23 <span style="color: green;">(4.43x)</span></strong></td>
     </tr>
     <tr>
-      <td style="padding: 8px; border: 1px solid #ddd;">Score ↑</td>
-      <td style="padding: 8px; border: 1px solid #ddd;">75.0</td>
-      <td style="padding: 8px; border: 1px solid #ddd;">75.0</td>
-      <td style="padding: 8px; border: 1px solid #ddd;"><b>77.6</b></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Flexible Acc. ↑</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">80.59</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">80.14</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">80.82</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">80.89</td>
     </tr>
     <tr>
-      <td rowspan="2" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle; background-color: #fafafa;"><strong>MBPP-3-shot</strong></td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">TPS ↑</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">10.4</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">73.2</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;"><strong>105 <font color="green">(10.1x)</font></strong></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Strict Acc. ↑</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">61.87</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">78.47</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">62.62</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">78.92</td>
+    </tr>
+    <tr style="background-color: #fafafa;">
+      <td rowspan="3" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle;"><strong>MATH</strong><br><em>4-shot</em></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Latency(s) ↓</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">25.12</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">20.63 <span style="color: green;">(1.22x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">9.48 <span style="color: green;">(2.65x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;"><strong>8.57 <span style="color: green;">(2.93x)</span></strong></td>
+    </tr>
+    <tr style="background-color: #fafafa;">
+      <td style="padding: 8px; border: 1px solid #ddd;">Flexible Acc. ↑</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">33.52</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">34.08</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">33.60</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">32.92</td>
+    </tr>
+    <tr style="background-color: #fafafa;">
+      <td style="padding: 8px; border: 1px solid #ddd;">Strict Acc. ↑</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">32.72</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">37.00</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">32.92</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">35.96</td>
     </tr>
     <tr>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">Score ↑</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">56.2</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">51.0</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;"><b>56.4</b></td>
+      <td rowspan="2" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle;"><strong>HumanEval</strong><br><em>0-shot</em></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Latency(s) ↓</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">34.80</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">11.55 <span style="color: green;">(3.01x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">11.16 <span style="color: green;">(3.12x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;"><strong>5.26 <span style="color: green;">(6.61x)</span></strong></td>
     </tr>
     <tr>
-      <td rowspan="2" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle;"><strong>HumanEval-0-shot</strong></td>
-      <td style="padding: 8px; border: 1px solid #ddd;">TPS ↑</td>
-      <td style="padding: 8px; border: 1px solid #ddd;">20.2</td>
-      <td style="padding: 8px; border: 1px solid #ddd;">60.0</td>
-      <td style="padding: 8px; border: 1px solid #ddd;"><strong>73.2 <font color="green">(3.6x)</font></strong></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Acc. ↑</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">40.85</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">44.51</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">39.63</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">39.63</td>
     </tr>
-    <tr>
-      <td style="padding: 8px; border: 1px solid #ddd;">Score ↑</td>
-      <td style="padding: 8px; border: 1px solid #ddd;">54.3</td>
-      <td style="padding: 8px; border: 1px solid #ddd;">53.0</td>
-      <td style="padding: 8px; border: 1px solid #ddd;"><b>55.5</b></td>
+    <tr style="background-color: #fafafa;">
+      <td rowspan="2" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle;"><strong>MBPP</strong><br><em>3-shot</em></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Latency(s) ↓</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">62.34</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">14.95 <span style="color: green;">(4.17x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">5.47 <span style="color: green;">(11.39x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;"><strong>4.41 <span style="color: green;">(14.14x)</span></strong></td>
     </tr>
-    <tr>
-      <td rowspan="2" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle; background-color: #fafafa;"><strong>Math-4-shot</strong></td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">TPS ↑</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">9.9</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">67.0</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;"><strong>98.8 <font color="green">(10.0x)</font></strong></td>
-    </tr>
-    <tr>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">Score ↑</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">35.8</td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;"><b>37.6</b></td>
-      <td style="padding: 8px; border: 1px solid #ddd; background-color: #fafafa;">35.4</td>
+    <tr style="background-color: #fafafa;">
+      <td style="padding: 8px; border: 1px solid #ddd;">Acc. ↑</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">38.20</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">39.80</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">38.60</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">41.60</td>
     </tr>
   </tbody>
 </table>
-</center>
 
-## ⚡️ Extreme Acceleration with vLLM Integration
 
-To push the boundaries of inference speed, we've integrated D2F with a **preliminary vLLM-based engine**. This unlocks a multiplicative speedup on top of our already-accelerated model, showcasing the immense potential for production environments.
-
-<center>
-
-<strong>HumanEval-0-shot with vLLM</strong>
+<strong>Performance on Dream-Base</strong>
 <table style="width:100%; border-collapse: collapse; text-align: center;">
   <thead style="background-color:#f2f2f2;">
     <tr>
-      <th style="padding: 8px; border: 1px solid #ddd;">Model</th>
-      <th style="padding: 8px; border: 1px solid #ddd;">TPS ↑</th>
-      <th style="padding: 8px; border: 1px solid #ddd;">Score ↑</th>
+      <th style="padding: 8px; border: 1px solid #ddd;">Benchmark</th>
+      <th style="padding: 8px; border: 1px solid #ddd;">Metric</th>
+      <th style="padding: 8px; border: 1px solid #ddd;">Vanilla</th>
+      <th style="padding: 8px; border: 1px solid #ddd;">+DPad</th>
+      <th style="padding: 8px; border: 1px solid #ddd;">+Parallel (Fast-dLLM)</th>
+      <th style="padding: 8px; border: 1px solid #ddd;">+Parallel+DPad (Ours)</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td style="padding: 8px; border: 1px solid #ddd;">Dream-Base (Baseline)</td>
-      <td style="padding: 8px; border: 1px solid #ddd;">20.2 <font color="green">(1.0x)</font></td>
-      <td style="padding: 8px; border: 1px solid #ddd;">54.3</td>
+      <td rowspan="3" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle;"><strong>GSM8K</strong><br><em>4-shot</em></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Latency(s) ↓</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">22.30</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">10.27 <span style="color: green;">(2.17x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">13.84 <span style="color: green;">(1.61x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;"><strong>5.24 <span style="color: green;">(4.25x)</span></strong></td>
     </tr>
     <tr>
-      <td style="padding: 8px; border: 1px solid #ddd;">D2F-Dream (Ours)</td>
-      <td style="padding: 8px; border: 1px solid #ddd;">73.2 <font color="green">(3.6x)</font></td>
-      <td style="padding: 8px; border: 1px solid #ddd;">54.3</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Flexible Acc. ↑</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">75.06</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">75.28</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">75.51</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">74.83</td>
     </tr>
-    <tr style="background-color:#E8F5E9;">
-      <td style="padding: 8px; border: 1px solid #ddd;"><strong>D2F-Dream + vLLM (Ours)</strong></td>
-      <td style="padding: 8px; border: 1px solid #ddd;"><strong>131.7 <font color="green">(6.5x)</font></strong></td>
-      <td style="padding: 8px; border: 1px solid #ddd;">40.2</td>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Strict Acc. ↑</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">74.37</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">75.06</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">74.83</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">74.75</td>
+    </tr>
+    <tr style="background-color: #fafafa;">
+      <td rowspan="3" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle;"><strong>MATH</strong><br><em>4-shot</em></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Latency(s) ↓</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">21.01</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">16.64 <span style="color: green;">(1.26x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">8.82 <span style="color: green;">(2.38x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;"><strong>7.72 <span style="color: green;">(2.72x)</span></strong></td>
+    </tr>
+    <tr style="background-color: #fafafa;">
+      <td style="padding: 8px; border: 1px solid #ddd;">Flexible Acc. ↑</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">34.06</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">34.14</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">35.12</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">34.44</td>
+    </tr>
+    <tr style="background-color: #fafafa;">
+      <td style="padding: 8px; border: 1px solid #ddd;">Strict Acc. ↑</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">37.76</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">37.64</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">38.62</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">38.32</td>
+    </tr>
+    <tr>
+      <td rowspan="2" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle;"><strong>HumanEval</strong><br><em>0-shot</em></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Latency(s) ↓</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">28.49</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">8.20 <span style="color: green;">(3.47x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">14.15 <span style="color: green;">(2.01x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;"><strong>4.06 <span style="color: green;">(7.01x)</span></strong></td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Acc. ↑</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">51.22</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">51.22</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">53.05</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">52.44</td>
+    </tr>
+    <tr style="background-color: #fafafa;">
+      <td rowspan="2" style="padding: 8px; border: 1px solid #ddd; vertical-align: middle;"><strong>MBPP</strong><br><em>3-shot</em></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">Latency(s) ↓</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">49.15</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">41.36 <span style="color: green;">(1.19x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;">12.38 <span style="color: green;">(3.97x)</span></td>
+      <td style="padding: 8px; border: 1px solid #ddd;"><strong>9.86 <span style="color: green;">(4.98x)</span></strong></td>
+    </tr>
+    <tr style="background-color: #fafafa;">
+      <td style="padding: 8px; border: 1px solid #ddd;">Acc. ↑</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">52.40</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">52.60</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">55.40</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">54.80</td>
     </tr>
   </tbody>
 </table>
-<br>
-<small>Our D2F-Dream model with a preliminary vLLM engine achieves a <b>6.5x speedup</b> over the original Dream-Base, though we observe a score drop that we are actively working to resolve through optimized kernels.</small>
 
 </center>
 
-> **Implementation Notes:**
-> The current vLLM integration is an initial proof-of-concept. It already provides a significant performance boost by leveraging Flex Attention, but there is substantial room for further optimization. Our future work will focus on implementing specialized CUDA kernels and other advanced vLLM features to maximize speed while restoring the score. -->
+## 🚀 Scaling with Long Sequences & Other Optimizations
+
+The true power of DPad emerges in long-sequence settings, where the cost of suffix attention becomes a dominant bottleneck. DPad's performance gains grow substantially with sequence length.
+
+Furthermore, DPad is complementary to other dLLM optimizations. It targets the redundant computation of KV-tokens, while parallel decoding mitigates sequential dependencies. When combined, these approaches yield multiplicative speedups.
+
+<center>
+<strong>LLaDA-1.5 on GSM8K (1024 tokens)</strong>
+
+![LLaDA](/Users/cosmos/Desktop/WorkStation/MyDLLM/DPad/assets/speedup_llada.png)
+
+
+
+<strong>Dream on Humaneval (1024/2048 tokens)</strong>
+
+![Dream](/Users/cosmos/Desktop/WorkStation/MyDLLM/DPad/assets/speedup_dream.png)
 
 ## 🚀 Usage Guide
 
@@ -276,13 +373,9 @@ First, clone the repository and set up the environment.
 
 ```shell
 # Clone the repository
-git clone https://github.com/Crys-Chen/DPad.git
+git clone [https://github.com/Crys-Chen/DPad.git](https://github.com/Crys-Chen/DPad.git)
 cd DPad
 ```
-
-#### Environment Configuration
-
-##### Conda 
 
 ```shell
 # Create and activate a conda environment
@@ -309,50 +402,51 @@ bash ./scirpts/long_seq.sh
 
 Results will be saved in the `llada/output`.
 
+#### Dream
+
+```shell
+cd dream
+```
+
+```shell
+bash ./scirpts/main_base.sh
+bash ./scirpts/long_seq.sh
+```
+
+Results will be saved in the `dream/output`.
+
 > ### ❗️ Important Notice for HumanEval
 > The `HumanEval` benchmark requires a post-processing step to sanitize the generated code and calculate the final `pass@1` score. After the evaluation script finishes, run the following command:
 > ```shell
 > python postprocess_code.py {path/to/your/samples_humaneval_xxx.jsonl}
 > ```
 > Replace the path with the actual path to your generated samples file, which can be found in the specified `output_path`.
-<!-- 
+
 ### 3. Generation Demo
 
-We provide simple scripts to demonstrate the generation process and compare D2F with a standard AR baseline.
+We provide simple scripts to demonstrate the generation process and compare DPad with baselines.
 ```shell
-# To run a demo with the D2F pipelined block generation method:
-python generate_llada_demo_block.py
-
-# To compare, run a demo with the baseline AR generation method:
-python generate_llada_demo_ar.py
+comming soon
 ```
-You can inspect these files to see how to use the D2F model for inference in your own projects. -->
+You can inspect these files to see how to use the DPad-enhanced model for inference in your own projects.
 
 ## 📚 Future Works
-<!-- 
-- [x] Implement dLLM-suported vLLM (preliminary).
-- [ ] Implement fused dLLM-specific decoding kernels for vLLM to maximize performance and restore scores.
-- [ ] Implement distributed inference with multi-GPUs in vLLM.
-- [ ] Implement CUDA graph capturing for dynamic sequences in vLLM. -->
+- [x] Coming soon
+- [ ] 
 
 ## 🙏 Acknowledgements
 This codebase is directly inherited from [Fast-dLLM](https://github.com/NVlabs/Fast-dLLM) and inspired by [dLLM-Cache](https://github.com/maomaocun/dLLM-cache), with the foundations laid by the original [**LLaDA**](https://ml-gsai.github.io/LLaDA-demo/) and [**Dream**](https://hkunlp.github.io/blog/2025/dream/) models. We thank their authors for making their work public. We are also grateful for the powerful open-source tools from HuggingFace team that made this research possible.
 
 ## ©️ Citation
 If you find our work useful for your research, please consider citing our paper:
-<!-- ```bibtex
-@misc{wang2025diffusionLLMsD2F,
-  title        = {Diffusion LLMs Can Do Faster-Than-AR Inference via Discrete Diffusion Forcing},
-  author       = {Wang, Xu and Xu, Chenkai and Jin, Yijie and Jin, Jiachun and Zhang, Hao and Deng, Zhijie},
-  year         = {2025},
-  month        = {aug},
-  eprint       = {2508.09192},
-  archivePrefix= {arXiv},
-  primaryClass = {cs.LG},
-  doi          = {10.48550/arXiv.2508.09192},
-  url          = {https://arxiv.org/abs/2508.09192},
-  note         = {arXiv:2508.09192}
+```bibtex
+@misc{chen2025dpad,
+      title={DPad: Efficient Diffusion Language Models with Suffix Dropout}, 
+      author={Xinhua Chen and Sitao Huang and Cong Guo and Chiyue Wei and Yintao He and Jianyi Zhang and Hai "Hellen" Li and Yiran Chen},
+      year={2025},
+      eprint={submit/6718185},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI}
 }
 
-
-``` -->
+```
