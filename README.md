@@ -79,11 +79,12 @@ DPad overcomes the high computational overhead of dLLMs, where models predict al
 
 ## ✨ Key Features & Modifications 
 
-This repository is built upon the `fast-dLLM` codebase and incorporates the following key features and modifications to implement the DPad methodology: 
+This repository is built upon the [Fast-dLLM](https://github.com/NVlabs/Fast-dLLM) codebase and incorporates the following key features and modifications to implement the DPad methodology: 
 
 * **Simplified Command-Line Interface**: To simplify experiments, the original complex commands have been wrapped into a user-friendly `run.py` script. You can now run evaluations and generation with simple, intuitive arguments. 
 
-* **Dynamic Suffix Sampling (DPad Core)**: The core of DPad is implemented in `sampler.py`. This module applies distance-decay dropout within the sliding window *before* the decoding process of each block, efficiently pruning redundant suffix tokens. The according changes were also made in `llada/generate.py` and `dream/model/generation_utils_block.py`.
+* **Dynamic Suffix Sampling (DPad Core)**: The core of DPad is implemented in sampler.py and integrated into the main generation pipelines (llada/generate.py for LLaDA and dream/model/generation_utils_block.py for Dream). This module applies distance-decay dropout within the sliding window before the decoding process of each block, efficiently pruning redundant suffix tokens.
+
 * **Expanded Model Support**: We have extended support to include the full semi-autoregressive mode for the `Dream-Base` model, enabling comprehensive evaluation across different dLLM architectures. 
 
 * **Adaptive Positional Embeddings (RoPE)**: We have modified the RoPE implementation to correctly handle the non-contiguous token sequences that result from our suffix dropout. This ensures each token retains its original positional information, maintaining the integrity of the model's spatial awareness.
