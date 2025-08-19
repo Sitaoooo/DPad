@@ -76,6 +76,7 @@ DPad overcomes the high computational overhead of dLLMs, where models predict al
       (b) Standard dLLMs attend to all suffix tokens, incurring high computational costs. <br>
       (c) DPad restricts attention to a small, nearby set of suffix tokens, eliminating redundant computation while preserving fidelity.</small>
 </p>
+
 ## ✨ Key Features & Modifications 
 
 This repository is built upon the `fast-dLLM` codebase and incorporates the following key features and modifications to implement the DPad methodology: 
