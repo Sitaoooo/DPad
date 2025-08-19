@@ -14,9 +14,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # Modified from LLaDA repos: https://github.com/ML-GSAI/LLaDA
-# Copyright 2025 [Your Name or Organization]
+# Copyright 2025 Xinhua Chen, Duke CEI Center
 # 
-# This file has been modified by [Your Name or Organization]. Changes include:
+# This file has been modified by Xinhua Chen, Duke CEI Center. Changes include:
 # - [Briefly describe the changes you made]
 
 
@@ -133,6 +133,8 @@ def generate(model, prompt, steps=128, gen_length=128, block_length=128, tempera
         sampler = GaussianSampler(length=gen_length, sigma=sigma, scale=scale, window=window)
     elif dropout == 'uniform':
         sampler = UniformSampler(length=gen_length, number=preserved_tokens, window=window)
+    else:
+        raise ValueError(f"dropout {dropout} not recognized")
     
     for num_block in range(num_blocks):
         block_start = prompt.shape[1] + num_block * block_length
@@ -206,6 +208,8 @@ def generate_with_prefix_cache(model, prompt, steps=128, gen_length=128, block_l
         sampler = GaussianSampler(length=gen_length, sigma=sigma, scale=scale, window=window)
     elif dropout == 'uniform':
         sampler = UniformSampler(length=gen_length, number=preserved_tokens, window=window)
+    else:
+        raise ValueError(f"dropout {dropout} not recognized")
             
     for num_block in range(num_blocks):
         block_start = prompt.shape[1] + num_block * block_length
@@ -304,6 +308,8 @@ def generate_with_dual_cache(model, prompt, steps=128, gen_length=128, block_len
         sampler = GaussianSampler(length=gen_length, sigma=sigma, scale=scale, window=window)
     elif dropout == 'uniform':
         sampler = UniformSampler(length=gen_length, number=preserved_tokens, window=window)
+    else:
+        raise ValueError(f"dropout {dropout} not recognized")
         
     for num_block in range(num_blocks):
         block_start = prompt.shape[1] + num_block * block_length

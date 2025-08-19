@@ -14,9 +14,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # Modified from LLaDA repos: https://github.com/ML-GSAI/LLaDA
-# Copyright 2025 [Your Name or Organization]
+# Copyright 2025 Xinhua Chen, Duke CEI Center
 # 
-# This file has been modified by [Your Name or Organization]. Changes include:
+# This file has been modified by Xinhua Chen, Duke CEI Center. 
+# Changes include:
 # - [Briefly describe the changes you made]
 
 

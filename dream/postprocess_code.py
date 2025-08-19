@@ -14,9 +14,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # Modified from Dream repos: https://github.com/HKUNLP/Dream
-# Copyright 2025 Xinhua Chen, Duke CEI Center
-# 
-# This file has been modified by Xinhua Chen, Duke CEI Center. 
 
 import evaluate as hf_evaluate
 import os
@@ -44,13 +41,17 @@ def read_jsonl(file_path):
     return data
 
 
+
 def write_jsonl(data, file_path):
     with open(file_path, 'w') as file:
         for item in data:
             file.write(json.dumps(item) + '\n')
 
+# res = [{"task_id": sample['doc']['task_id'], "completion": pred, "pass_at_1": res} 
+#        for sample, pred, res  in zip(data, predictions, pass_at_1s)]
+# write_jsonl(res, file_path+'.cleaned')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     file_path = sys.argv[1]
     data = read_jsonl(file_path)
 
@@ -62,6 +63,3 @@ if __name__ == "__main__":
 
     pass_at_1s = [pass_at_1([reference], [prediction]) for reference, prediction in zip(references, predictions)]
     print(sum(pass_at_1s)/len(pass_at_1s))
-    res = [{"task_id": sample['doc']['task_id'], "completion": pred, "pass_at_1": res} 
-        for sample, pred, res  in zip(data, predictions, pass_at_1s)]
-    write_jsonl(res, file_path+'.cleaned')

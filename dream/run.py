@@ -25,7 +25,7 @@ if __name__ == "__main__":
     os.environ["HF_DATASETS_TRUST_REMOTE_CODE"] = "true"
 
     # --- Directory creation logic (unchanged) ---
-    for model in ['instruct', '1.5', 'base']:
+    for model in ['instruct', 'base']:
         if not os.path.exists(f"output/log/{model}/"):
             os.makedirs(f"output/log/{model}/")
         if not os.path.exists(f"output/debug/{model}/"):
@@ -33,24 +33,23 @@ if __name__ == "__main__":
 
     # --- Model selection logic (unchanged) ---
     if args.model == 'instruct':
-        model = 'GSAI-ML/LLaDA-8B-Instruct'
+        raise ValueError("Model 'instruct' is not supported in this script yet. Please use 'base' ")
+        model = 'Dream-org/Dream-v0-Instruct-7B'
     elif args.model == 'base':
-        model = 'GSAI-ML/LLaDA-8B-Base'
-    elif args.model == '1.5':
-        model = 'GSAI-ML/LLaDA-1.5'
+        model = 'Dream-org/Dream-v0-Base-7B'
     else:
         raise ValueError(f"Unknown model: {args.model}")
 
     # --- Parameter and filename construction logic (unchanged) ---
     if args.threshold == 0:
         steps = args.gen_length
-        sampling = '_t_'
-        threshold = ''
+        sampling = 't_'
+        threshold = 'alg=entropy,'
     else:
         assert 0 < args.threshold < 1, "Invalid threshold"
         steps = args.gen_length // args.block_size
-        sampling = '_p_'
-        threshold = f'threshold={args.threshold},'
+        sampling = 'p_'
+        threshold = f'alg=confidence_threshold,threshold={args.threshold},'
 
     if args.dc is True:
         args.c = True
@@ -61,7 +60,7 @@ if __name__ == "__main__":
         cache = ''
 
     if args.e is True:
-        early = '_e_'
+        early = 'e_'
     else:
         early = ''
  
@@ -76,7 +75,7 @@ if __name__ == "__main__":
         assert args.d == 'null', "Invalid dropout strategy"
         dropout = ''
 
-    filename = f"{args.name}{args.task}{sampling}{cache}{early}len{args.gen_length}_blk{args.block_size}{dropout}"
+    filename = f"{args.name}{args.task}_{sampling}{cache}{early}len{args.gen_length}_blk{args.block_size}{dropout}"
     log_file = f"output/log/{args.model}/{filename}.log"
     debug_file = f"output/debug/{args.model}/{filename}.log"
     save_dir = f"output/checkpoint/{args.model}/{filename}"
@@ -84,25 +83,27 @@ if __name__ == "__main__":
     # --- [The Elegant Way] Build and execute the command using subprocess ---
 
     # 1. Build the command as a list of arguments for safety and clarity.
-    base_cmd = ['accelerate', 'launch', 'eval_llada.py']
+    base_cmd = ['accelerate', 'launch', 'eval.py']
 
     task_args = ['--tasks', args.task]
     if args.task == 'humaneval':
         task_args.append('--log_samples')
     else:
         task_args.extend(['--num_fewshot', str(args.num_fewshot)])
-
+    
+    task_args.extend(['--batch_size', str(1)])
+    
     model_args_string = (
-        f"model_path={model},gen_length={args.gen_length},steps={steps},block_length={args.block_size},"
+        f"pretrained={model},max_new_tokens={args.gen_length},block_length={args.block_size},diffusion_steps={steps},add_bos_token=true,"
         f"{threshold}"
-        f"from_scratch={args.re},save_dir={save_dir},show_speed=True,"
+        f"show_speed=True,escape_until=true,save_dir={save_dir},from_scratch={args.re},"
         f"use_cache={args.c},dual_cache={args.dc},early_termination={args.e},"
         f"dropout={args.d},sigma={args.k_sigma},scale={args.scale},preserved_tokens={args.nt},window={args.window}"
     )
 
     # 2. Assemble the final command list.
     cmd_list = base_cmd + task_args
-    cmd_list.extend(['--confirm_run_unsafe_code', '--model', 'llada_dist'])
+    cmd_list.extend(['--confirm_run_unsafe_code', '--model', 'dream'])
     cmd_list.extend(['--model_args', model_args_string])
 
     # Add the specific output path parameter based on the task.

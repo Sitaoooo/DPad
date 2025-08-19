@@ -42,7 +42,6 @@ class GaussianSampler(Sampler):
         super().__init__(length,window)
         self.sigma = sigma
         self.scale = scale
-
     
     def pdf(self):
         '''

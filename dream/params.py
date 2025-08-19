@@ -30,7 +30,7 @@ parser.add_argument("-m", "--model", type=str, default='instruct', help="Model n
 parser.add_argument("-d", "--dropout_strategy", dest='d', type=str, default='null', help="Pruning strategy ('gaussian' or 'random')")
 parser.add_argument("-w", "--window", type=int, default=256, help="Dropout window size")
 parser.add_argument("-k", "--k_sigma", type=int, default=4, help="The end of dropout window falls at k * sigma in Gaussian Distribution")
-parser.add_argument("-sc", "--scale", type=float, default=2.0, help="Scale factor for Gaussian Pruning")
+parser.add_argument("-sc", "--scale", type=float, default=1.6, help="Scale factor for Gaussian Pruning")
 parser.add_argument("-nt", "--num_tokens", dest='nt', type=int, default=0, help="Number of reserved tokens for Random Pruning")
 
 parser.add_argument("-c", "--use_cache", dest='c', help='Use cache', action='store_true')
