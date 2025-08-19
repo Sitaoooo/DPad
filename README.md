@@ -435,6 +435,8 @@ bash ./scirpts/main_base.sh
 bash ./scirpts/long_seq.sh
 ```
 
+(Dream-Instruct is coming soon)
+
 Results will be saved in the `dream/output`.
 
 > ### ❗️ Important Notice for HumanEval
