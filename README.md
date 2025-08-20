@@ -96,7 +96,6 @@ DPad delivers transformative speedups while maintaining or improving scores. Bel
 
 <center>
 <strong>Performance on LLaDA-Instruct</strong>
-
 <table style="width:100%; border-collapse: collapse; text-align:left;">
   <thead style="background-color:#f2f2f2;">
     <tr>
@@ -174,7 +173,7 @@ DPad delivers transformative speedups while maintaining or improving scores. Bel
       <td style="padding: 8px; border: 1px solid #ddd;">62.11</td>
       <td style="padding: 8px; border: 1px solid #ddd;">15.89 <span style="color: green;">(3.91x)</span></td>
       <td style="padding: 8px; border: 1px solid #ddd;">14.26 <span style="color: green;">(4.36x)</span></td>
-      <td style="padding: 8px; border: 1px solid #ddd;"><strong>10.32 <span style="color: green;">(6.02x)</span></strong></td>
+      <td style="padding: 8px; border: 1px solid #ddd;"><strong>6.02 <span style="color: green;">(10.32x)</span></strong></td>
     </tr>
     <tr style="background-color: #fafafa;">
       <td style="padding: 8px; border: 1px solid #ddd;">Acc. ↑</td>
@@ -185,6 +184,7 @@ DPad delivers transformative speedups while maintaining or improving scores. Bel
     </tr>
   </tbody>
 </table>
+
 
 <strong>Performance on LLaDA-1.5</strong>
 
