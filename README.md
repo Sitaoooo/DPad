@@ -9,10 +9,11 @@
 <p align="left">
   <a href="https://arxiv.org/abs/submit/6718185"><b>📄 Paper</b></a>
   </p>
-
 <p align="center">
   </p>
 <hr>
+<center>
+<strong>LLaDA-1.5 on GSM8K (1024 tokens)</strong>
 <p align="center">
     <img src="assets/speedup_llada.png" width="800">
     <br>
@@ -22,6 +23,7 @@
     <br>
     <small>(Evaluation conducted on NVIDIA A100-PCIe-80GB GPUs).</small>
 </p>
+
 
 **Diffusion Scratchpad (DPad)** is a novel training-free inference paradigm that overcomes a key efficiency bottleneck in Diffusion Language Models (dLLMs): the high computational cost of full suffix attention. By intelligently pruning redundant suffix tokens, DPad achieves:
 
@@ -397,13 +399,13 @@ Furthermore, DPad is complementary to other dLLM optimizations. It targets the r
 
 First, clone the repository and set up the environment.
 
-```shell
+```bash
 # Clone the repository
 git clone [https://github.com/Crys-Chen/DPad.git](https://github.com/Crys-Chen/DPad.git)
 cd DPad
 ```
 
-```shell
+```bash
 # Create and activate a conda environment
 conda create -n dpad python=3.10
 conda activate dpad
@@ -416,11 +418,11 @@ pip install -r requirements.txt
 All evaluation scripts are located in the `llada/scripts` and `dream/scripts`.
 
 #### LLaDA
-```shell
+```bash
 cd llada
 ```
 
-```shell
+```bash
 bash ./scirpts/main_instruct.sh
 bash ./scirpts/main_1.5.sh
 bash ./scirpts/long_seq.sh
@@ -430,11 +432,11 @@ Results will be saved in the `llada/output`.
 
 #### Dream
 
-```shell
+```bash
 cd dream
 ```
 
-```shell
+```bash
 bash ./scirpts/main_base.sh
 # Dream-Instruct is coming soon
 bash ./scirpts/long_seq.sh
@@ -444,20 +446,56 @@ Results will be saved in the `dream/output`.
 
 > ### ❗️ Important Notice for HumanEval
 > The `HumanEval` benchmark requires a post-processing step to sanitize the generated code and calculate the final `pass@1` score. After the evaluation script finishes, run the following command:
-> ```shell
+> ```bash
 > python postprocess_code.py {path/to/your/samples_humaneval_xxx.jsonl}
 > ```
 > Replace the path with the actual path to your generated samples file, which can be found in the specified `output_path`.
 
-### 3. Generation Demo
 
-We provide simple scripts to demonstrate the generation process and compare DPad with baselines.
-```shell
-comming soon
+
+### 3. Demo
+
+To run the demo yourself, please follow these steps:
+
+**1. Set Up the Custom Evaluation Task**
+
+The demo requires a specific task configuration for the `lm-evaluation-harness`. You'll need to copy the provided YAML file into your Python environment's `lm_eval` package.
+
+- **Copy from:** `./demo/gsm8k-split.yaml`
+- **Copy to:** `.../site-packages/lm_eval/tasks/gsm8k/`
+
+For example, if you're using Conda, the command would look something like this:
+
+``` bash
+cp ./demo/gsm8k-split.yaml /path/to/conda/envs/YOUR_ENV_NAME/lib/pythonX.X/site-packages/lm_eval/tasks/gsm8k/
 ```
-You can inspect these files to see how to use the DPad-enhanced model for inference in your own projects.
+
+**2. Configure Dataset Paths**
+
+Next, you must edit the `gsm8k-split.yaml` file you just copied. Open it and modify lines 5-9 to point to the absolute path of the demo dataset on your machine.
+
+```yaml
+# Edit this file: .../site-packages/lm_eval/tasks/gsm8k/gsm8k-split.yaml
+
+dataset_kwargs:
+  data_files:
+    train: "/path/to/your/repo/dataset/gsm8k-50.arrow"
+    validation: "/path/to/your/repo/dataset/gsm8k-50.arrow"
+    test: "/path/to/your/repo/dataset/gsm8k-50.arrow"
+```
+
+Make sure to replace `/path/to/your/repo/` with the correct path to this repository's root directory.
+
+**3. Run the Demo Script**
+
+Once configured, simply execute the demo script from the root of the repository:
+
+```bash
+bash ./demo/demo.sh
+```
 
 ## 📚 Future Works
+
 - [x] Coming soon
 - [ ] 
 
