@@ -32,6 +32,10 @@
 
 This repository provides the code to reproduce our evaluation results.
 
+
+https://github.com/user-attachments/assets/d2bce8f2-310e-4f14-8b4e-cbef8c962741
+
+
 ## 🔥 News!
 * Aug 19, 2025: We've released our paper on DPad!
 ## Contents
