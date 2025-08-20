@@ -27,7 +27,7 @@
 
 **Diffusion Scratchpad (DPad)** is a novel training-free inference paradigm that overcomes a key efficiency bottleneck in Diffusion Language Models (dLLMs): the high computational cost of full suffix attention. By intelligently pruning redundant suffix tokens, DPad achieves:
 
-- Up to a staggering **61.39x acceleration** over vanilla dLLM baselines on long-sequence benchmarks.
+- Up to a staggering **61.39x acceleration** over vanilla dLLM baselines on long-sequence benchmarks (GSM8K, 1319 samples).
 - A significant improvement in **strict-match accuracy** on reasoning tasks by enhancing in-context learning.
 - Comparable or better generation quality on standard reasoning and coding benchmarks.
 - **Seamless integration** with existing optimizations like parallel decoding and prefix caching for multiplicative speedups.
@@ -36,6 +36,7 @@ This repository provides the code to reproduce our evaluation results.
 
 <center>
 <strong>Demo for LLaDA-1.5 on GSM8K (50 samples) (1024, 1-shot)</strong>
+
 https://github.com/user-attachments/assets/d2bce8f2-310e-4f14-8b4e-cbef8c962741
 
 ## 🔥 News!
