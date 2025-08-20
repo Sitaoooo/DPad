@@ -14,11 +14,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # Modified from LLaDA repos: https://github.com/ML-GSAI/LLaDA
+
 # Copyright 2025 Xinhua Chen, Duke CEI Center
 # 
 # This file has been modified by Xinhua Chen, Duke CEI Center. 
 # Changes include:
-# - [Briefly describe the changes you made]
+# 1. Integrated Diffusion Scratchpad (DPad) for efficient inference.
 
 
 '''

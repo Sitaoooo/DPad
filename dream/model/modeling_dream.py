@@ -16,6 +16,12 @@
 
 # Modified from Dream repos: https://github.com/HKUNLP/Dream
 
+# Copyright 2025 Xinhua Chen, Duke CEI Center
+# 
+# This file has been modified by Xinhua Chen, Duke CEI Center. 
+# Changes include:
+# 1. Modified the RoPE implementation to handle discontinuous position IDs.
+
 """PyTorch Dream model."""
 
 import math

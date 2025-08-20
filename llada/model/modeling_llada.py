@@ -14,10 +14,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # Modified from LLaDA repos: https://github.com/ML-GSAI/LLaDA
+
 # Copyright 2025 Xinhua Chen
 # 
 # This file has been modified by Xinhua Chen. Changes include:
-# - [Briefly describe the changes you made]
+# 1. Modified the RoPE implementation to handle discontinuous position IDs.
+
 
 from __future__ import annotations
 
