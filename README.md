@@ -41,20 +41,18 @@ https://github.com/user-attachments/assets/d2bce8f2-310e-4f14-8b4e-cbef8c962741
 
 ## 🔥 News!
 * Aug 19, 2025: We've released our paper on DPad!
+
 ## Contents
-- [DPad: Efficient Diffusion Language Models with Suffix Dropout](#dpad-efficient-diffusion-language-models-with-suffix-dropout)
-- [🔥 News!](#-news)
-- [Contents](#contents)
 - [🤔 How It Works](#-how-it-works)
-- [✨ Key Features \& Modifications](#-key-features--modifications)
+- [✨ Key Features & Modifications](#-key-features--modifications)
 - [📊 Performance Highlights](#-performance-highlights)
-- [🚀 Scaling with Long Sequences \& Other Optimizations](#-scaling-with-long-sequences--other-optimizations)
+- [🚀 Scaling with Long Sequences & Other Optimizations](#-scaling-with-long-sequences--other-optimizations)
 - [🚀 Usage Guide](#-usage-guide)
   - [1. Installation](#1-installation)
   - [2. Evaluation](#2-evaluation)
     - [LLaDA](#llada)
     - [Dream](#dream)
-  - [3. Generation Demo](#3-generation-demo)
+  - [3. Demo](#3-demo)
 - [📚 Future Works](#-future-works)
 - [🙏 Acknowledgements](#-acknowledgements)
 - [©️ Citation](#️-citation)
@@ -506,13 +504,14 @@ This codebase is directly inherited from [Fast-dLLM](https://github.com/NVlabs/F
 ## ©️ Citation
 If you find our work useful for your research, please consider citing our paper:
 ```bibtex
-@misc{chen2025dpad,
+@misc{chen2025dpadefficientdiffusionlanguage,
       title={DPad: Efficient Diffusion Language Models with Suffix Dropout}, 
       author={Xinhua Chen and Sitao Huang and Cong Guo and Chiyue Wei and Yintao He and Jianyi Zhang and Hai "Hellen" Li and Yiran Chen},
       year={2025},
-      eprint={submit/6718185},
+      eprint={2508.14148},
       archivePrefix={arXiv},
-      primaryClass={cs.AI}
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2508.14148}, 
 }
 
 ```
