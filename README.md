@@ -7,7 +7,7 @@
 ## DPad: Efficient Diffusion Language Models with Suffix Dropout
 
 <p align="left">
-  <a href="https://arxiv.org/abs/submit/6718185"><b>📄 Paper</b></a>
+  <a href="https://arxiv.org/abs/2508.14148"><b>📄 Paper</b></a>
   </p>
 <p align="center">
   </p>
