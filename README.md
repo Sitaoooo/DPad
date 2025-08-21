@@ -2,8 +2,6 @@
     <img src="assets/logo.png" width="300">
 </p>
 
-
-
 ## DPad: Efficient Diffusion Language Models with Suffix Dropout
 
 <p align="left">
@@ -24,7 +22,6 @@
     <small>(Evaluation conducted on NVIDIA A100-PCIe-80GB GPUs).</small>
 </p>
 
-
 **Diffusion Scratchpad (DPad)** is a novel training-free inference paradigm that overcomes a key efficiency bottleneck in Diffusion Language Models (dLLMs): the high computational cost of full suffix attention. By intelligently pruning redundant suffix tokens, DPad achieves:
 
 - Up to a staggering **61.39x acceleration** over vanilla dLLM baselines on long-sequence benchmarks (GSM8K, 1319 samples).
@@ -40,9 +37,11 @@ This repository provides the code to reproduce our evaluation results.
 https://github.com/user-attachments/assets/d2bce8f2-310e-4f14-8b4e-cbef8c962741
 
 ## 🔥 News!
+
 * Aug 19, 2025: We've released our paper on DPad!
 
 ## Contents
+
 - [🤔 How It Works](#-how-it-works)
 - [✨ Key Features & Modifications](#-key-features--modifications)
 - [📊 Performance Highlights](#-performance-highlights)
@@ -82,18 +81,14 @@ DPad overcomes the high computational overhead of dLLMs, where models predict al
       (c) DPad restricts attention to a small, nearby set of suffix tokens, eliminating redundant computation while preserving fidelity.</small>
 </p>
 
-## ✨ Key Features & Modifications 
+## ✨ Key Features & Modifications
 
-This repository is built upon the [Fast-dLLM](https://github.com/NVlabs/Fast-dLLM) codebase and incorporates the following key features and modifications to implement the DPad methodology: 
+This repository is built upon the [Fast-dLLM](https://github.com/NVlabs/Fast-dLLM) codebase and incorporates the following key features and modifications to implement the DPad methodology:
 
-* **Simplified Command-Line Interface**: To simplify experiments, the original complex commands have been wrapped into a user-friendly `run.py` script. You can now run evaluations and generation with simple, intuitive arguments. 
-
+* **Simplified Command-Line Interface**: To simplify experiments, the original complex commands have been wrapped into a user-friendly `run.py` script. You can now run evaluations and generation with simple, intuitive arguments.
 * **Dynamic Suffix Sampling (DPad Core)**: The core of DPad is implemented in `sampler.py` and integrated into the main generation pipelines (`llada/generate.py` for LLaDA and `dream/model/generation_utils_block.py` for Dream). This module applies distance-decay dropout within the sliding window before the decoding process of each block, efficiently pruning redundant suffix tokens.
-
-* **Expanded Model Support**: We have extended support to include the full semi-autoregressive mode for the `Dream-Base` model, enabling comprehensive evaluation across different dLLM architectures. 
-
+* **Expanded Model Support**: We have extended support to include the full semi-autoregressive mode for the `Dream-Base` model, enabling comprehensive evaluation across different dLLM architectures.
 * **Adaptive Positional Embeddings (RoPE)**: We have modified the RoPE implementation to correctly handle the non-contiguous token sequences that result from our suffix dropout. This ensures each token retains its original positional information, maintaining the integrity of the model's spatial awareness.
-
 
 ## 📊 Performance Highlights
 
@@ -190,7 +185,6 @@ DPad delivers transformative speedups while maintaining or improving scores. Bel
   </tbody>
 </table>
 
-
 <strong>Performance on LLaDA-1.5</strong>
 
 <table style="width:100%; border-collapse: collapse; text-align: left;">
@@ -282,8 +276,8 @@ DPad delivers transformative speedups while maintaining or improving scores. Bel
   </tbody>
 </table>
 
-
 <strong>Performance on Dream-Base</strong>
+
 <table style="width:100%; border-collapse: collapse; text-align: left;">
   <thead style="background-color:#f2f2f2;">
     <tr>
@@ -386,8 +380,6 @@ Furthermore, DPad is complementary to other dLLM optimizations. It targets the r
 
 ![LLaDA](assets/speedup_llada.png)
 
-
-
 <strong>Dream on Humaneval (1024/2048 tokens)</strong>
 
 ![Dream](assets/speedup_dream.png)
@@ -414,9 +406,11 @@ pip install -r requirements.txt
 ```
 
 ### 2. Evaluation
+
 All evaluation scripts are located in the `llada/scripts` and `dream/scripts`.
 
 #### LLaDA
+
 ```bash
 cd llada
 ```
@@ -444,13 +438,14 @@ bash ./scirpts/long_seq.sh
 Results will be saved in the `dream/output`.
 
 > ### ❗️ Important Notice for HumanEval
+>
 > The `HumanEval` benchmark requires a post-processing step to sanitize the generated code and calculate the final `pass@1` score. After the evaluation script finishes, run the following command:
+>
 > ```bash
 > python postprocess_code.py {path/to/your/samples_humaneval_xxx.jsonl}
 > ```
+>
 > Replace the path with the actual path to your generated samples file, which can be found in the specified `output_path`.
-
-
 
 ### 3. Demo
 
@@ -465,7 +460,7 @@ The demo requires a specific task configuration for the `lm-evaluation-harness`.
 
 For example, if you're using Conda, the command would look something like this:
 
-``` bash
+```bash
 cp ./demo/gsm8k-split.yaml /path/to/conda/envs/YOUR_ENV_NAME/lib/pythonX.X/site-packages/lm_eval/tasks/gsm8k/
 ```
 
@@ -495,14 +490,17 @@ bash ./demo/demo.sh
 
 ## 📚 Future Works
 
-- [x] Coming soon
-- [ ] 
+- [X] **Integrate Suffix Dropout into Training:** Future work can incorporate the distance-decay dropout strategy directly into the Supervised Fine-Tuning (SFT) by modifying the training objective (see paper). This would allow a consistent match in posterior between training and inference, while reducing scratchpad inefficiency even better.
+
 
 ## 🙏 Acknowledgements
+
 This codebase is directly inherited from [Fast-dLLM](https://github.com/NVlabs/Fast-dLLM) and inspired by [dLLM-Cache](https://github.com/maomaocun/dLLM-cache), with the foundations laid by the original [**LLaDA**](https://ml-gsai.github.io/LLaDA-demo/) and [**Dream**](https://hkunlp.github.io/blog/2025/dream/) models. We thank their authors for making their work public. We are also grateful for the powerful open-source tools from HuggingFace team that made this research possible.
 
 ## ©️ Citation
+
 If you find our work useful for your research, please consider citing our paper:
+
 ```bibtex
 @misc{chen2025dpadefficientdiffusionlanguage,
       title={DPad: Efficient Diffusion Language Models with Suffix Dropout}, 
